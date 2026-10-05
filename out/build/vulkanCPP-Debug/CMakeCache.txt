@@ -232,7 +232,7 @@ CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
 CMAKE_READELF:FILEPATH=/usr/bin/readelf
 
 //No help, variable specified on the command line.
-CMAKE_RUNTIME_OUTPUT_DIRECTORY:UNINITIALIZED=/home/mazf/Documents/VulkanCPP/dist
+CMAKE_RUNTIME_OUTPUT_DIRECTORY:UNINITIALIZED=/home/mazf/Documents/VulkanCPP/dist/debug
 
 //Flags used by the linker during the creation of shared libraries
 // during all build types.
@@ -368,6 +368,9 @@ FRIBIDI_LIB:FILEPATH=/usr/lib/x86_64-linux-gnu/libfribidi.so
 
 //Path to a library.
 GBM_LIB:FILEPATH=/usr/lib/x86_64-linux-gnu/libgbm.so
+
+//Path to a program.
+GITCOMMAND:FILEPATH=/usr/bin/git
 
 //Path to a file.
 HAVE_LIBURING_H:PATH=/usr/include
@@ -1707,6 +1710,8 @@ FIND_PACKAGE_MESSAGE_DETAILS_Vulkan:INTERNAL=[/usr/lib/x86_64-linux-gnu/libvulka
 FIND_PACKAGE_MESSAGE_DETAILS_X11:INTERNAL=[/usr/include][/usr/lib/x86_64-linux-gnu/libX11.so][c ][v()]
 //Have library c
 FOUND_CLOCK_GETTIME_LIBC:INTERNAL=1
+//ADVANCED property for variable: GITCOMMAND
+GITCOMMAND-ADVANCED:INTERNAL=1
 //Have include alloca.h
 HAVE_ALLOCA_H:INTERNAL=1
 //Test HAVE_CLANG_COMMENT_BLOCK_COMMANDS

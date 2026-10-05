@@ -307,6 +307,7 @@ CMakeFiles/VulkanCPP.dir/src/main.cpp.o: \
  /home/mazf/Documents/VulkanCPP/external/SDL3/include/SDL3/SDL_tray.h \
  /home/mazf/Documents/VulkanCPP/external/SDL3/include/SDL3/SDL_version.h \
  /home/mazf/Documents/VulkanCPP/external/SDL3/include/SDL3/SDL_oldnames.h \
+ /home/mazf/Documents/VulkanCPP/external/SDL3/include/SDL3/SDL_vulkan.h \
  /usr/include/glm/glm.hpp /usr/include/glm/detail/_fixes.hpp \
  /usr/include/c++/13/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
@@ -444,4 +445,6 @@ CMakeFiles/VulkanCPP.dir/src/main.cpp.o: \
  /usr/include/glm/detail/type_half.hpp \
  /usr/include/glm/detail/type_half.inl /usr/include/glm/integer.hpp \
  /usr/include/glm/detail/func_integer.inl /usr/include/c++/13/iostream \
- /usr/include/c++/13/istream /usr/include/c++/13/bits/istream.tcc
+ /usr/include/c++/13/istream /usr/include/c++/13/bits/istream.tcc \
+ /usr/include/c++/13/ranges /usr/include/c++/13/iterator \
+ /usr/include/c++/13/bits/stream_iterator.h

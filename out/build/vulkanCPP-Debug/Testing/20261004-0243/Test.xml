@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="Linux-g++"
+	BuildStamp="20261004-0243-Experimental"
+	Name="FachryDevice"
+	Generator="ctest-3.28.3"
+	CompilerName="/usr/bin/g++"
+	CompilerVersion="13.3.0"
+	OSName="Linux"
+	Hostname="FachryDevice"
+	OSRelease="7.0.0-38-generic"
+	OSVersion="#38~24.04.4-Ubuntu SMP PREEMPT_DYNAMIC Mon Sep 14 16:37:11 UTC 2"
+	OSPlatform="x86_64"
+	Is64Bits="1"
+	VendorString="GenuineIntel"
+	VendorID="Intel Corporation"
+	FamilyID="6"
+	ModelID="154"
+	ProcessorCacheSize="12288"
+	NumberOfLogicalCPU="12"
+	NumberOfPhysicalCPU="10"
+	TotalVirtualMemory="6143"
+	TotalPhysicalMemory="7671"
+	LogicalProcessorsPerPhysical="1"
+	ProcessorClockFrequency="3799.96"
+	>
+	<Testing>
+		<StartDateTime>Oct 04 21:24 WIB</StartDateTime>
+		<StartTestTime>1791123880</StartTestTime>
+		<TestList/>
+		<EndDateTime>Oct 04 21:24 WIB</EndDateTime>
+		<EndTestTime>1791123880</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

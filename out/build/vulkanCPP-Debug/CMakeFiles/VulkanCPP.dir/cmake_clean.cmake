@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/mazf/Documents/VulkanCPP/dist/VulkanCPP"
-  "/home/mazf/Documents/VulkanCPP/dist/VulkanCPP.pdb"
+  "/home/mazf/Documents/VulkanCPP/dist/debug/VulkanCPP"
+  "/home/mazf/Documents/VulkanCPP/dist/debug/VulkanCPP.pdb"
   "CMakeFiles/VulkanCPP.dir/src/main.cpp.o"
   "CMakeFiles/VulkanCPP.dir/src/main.cpp.o.d"
 )

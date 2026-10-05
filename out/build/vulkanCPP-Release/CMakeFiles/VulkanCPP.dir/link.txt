@@ -1,0 +1,1 @@
+/usr/bin/g++ -O3 -DNDEBUG CMakeFiles/VulkanCPP.dir/src/main.cpp.o -o /home/mazf/Documents/VulkanCPP/dist/release/VulkanCPP  -Wl,-rpath,/home/mazf/vulkan/1.4.357.1/x86_64/lib/VulkanLoader/lib:/home/mazf/Documents/VulkanCPP/out/build/vulkanCPP-Release/external/SDL3 /home/mazf/vulkan/1.4.357.1/x86_64/lib/VulkanLoader/lib/libvulkan.so external/SDL3/libSDL3.so.0.4.18 

@@ -24,9 +24,9 @@ target_include_directories(VulkanCPP PRIVATE
         "${CMAKE_SOURCE_DIR}/external/SDL3/include"
 )
 
-set(RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
-set(LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
-set(ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
+# set(RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
+# set(LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
+# set(ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
 
 include(CTest)
 enable_testing()
