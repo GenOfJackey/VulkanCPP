@@ -9,6 +9,9 @@ import vulkan_hpp;
 constexpr bool VALIDATION_LAYER {false};
 #else
 constexpr bool VALIDATION_LAYER {true};
+#ifndef DEBUG_MODE
+#define DEBUG_MODE
+#endif
 #endif
 
 #include <SDL3/SDL.h>
@@ -16,6 +19,7 @@ constexpr bool VALIDATION_LAYER {true};
 #include <glm/glm.hpp>
 
 #include <iostream>
+#include <map>
 #include <vector>
 #include <stdexcept>
 #include <ranges>
@@ -39,14 +43,17 @@ public:
 private:
         SDL_Window *window{};
         vk::raii::Context context;
-        vk::raii::Instance instance = nullptr;
+        vk::raii::Instance instance{nullptr};
+        vk::raii::PhysicalDevice physicalDevice{nullptr};
 
         std::vector<const char *> getRequiredInstanceExtension()
         {
                 uint32_t SDLExtensionCount{0};
                 auto SDLExtensions{SDL_Vulkan_GetInstanceExtensions(&SDLExtensionCount)};
-
                 std::vector extensions(SDLExtensions, SDLExtensions + SDLExtensionCount);
+
+                if (VALIDATION_LAYER) extensions.push_back(vk::EXTDebugUtilsExtensionName );
+
                 return extensions;
         }
 
@@ -57,7 +64,7 @@ private:
                 for (auto ext : availableExtensions)
                 {
                         std::cout << "Extension available: " << ext.extensionName
-                                  << "\t Extension version: " << ext.specVersion << '\n';
+                                  << "\t\t Extension version: " << ext.specVersion << '\n';
                 }
 
                 // Checking if the required extensions are available and
@@ -155,6 +162,39 @@ private:
                 instance = vk::raii::Instance(context, createInfo);
         }
 
+        void pickPhysicalDevice()
+        {
+                auto physicalDeviceList{instance.enumeratePhysicalDevices()};
+                if (physicalDeviceList.empty())
+                {
+                        throw std::runtime_error("Dude there's no physical devices for vulkan dude get a budget");
+                }
+
+#ifdef DEBUG_MODE
+                for (const auto& physicalDevice : physicalDeviceList)
+                {
+                        auto physicalDeviceProperties{physicalDevice.getProperties2()};
+
+                        std::cout << "Available physical device:\n ";
+                        std::cout << "Device name: " << physicalDeviceProperties.properties.deviceName
+                                << "\tDriver version: " << physicalDeviceProperties.properties.driverVersion << '\n';
+                }
+#endif
+
+
+                std::multimap<int, vk::raii::PhysicalDevice> pdScore;
+                // Evaluate whether the physical device fits the specification
+                for (const auto& physicalDevice : physicalDeviceList)
+                {
+                        auto physicalDeviceFeatures{physicalDevice.getFeatures2()};
+                        auto physicalDeviceProperties{physicalDevice.getProperties2()};
+
+                        
+
+                        break;                        
+                }
+        }
+
         void initWindow()
         {
                 constexpr uint32_t WIDTH{800};
@@ -169,6 +209,7 @@ private:
         void initVulkan()
         {
                 createInstance();
+                pickPhysicalDevice();
         }
 
         void rendererLoop()
