@@ -11,7 +11,10 @@ find_package(Vulkan REQUIRED)
 find_package(slang CONFIG HINTS "$ENV{VULKAN_SDK}/lib/cmake")
 find_package(glm REQUIRED)
 
-add_executable(VulkanCPP src/main.cpp)
+add_executable(VulkanCPP 
+        src/maincrude.cpp
+        src/rendering.cpp
+)
 
 target_link_libraries(VulkanCPP PRIVATE 
         Vulkan::Vulkan

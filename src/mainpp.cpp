@@ -182,17 +182,87 @@ private:
 #endif
 
 
-                std::multimap<int, vk::raii::PhysicalDevice> pdScore;
-                // Evaluate whether the physical device fits the specification
-                for (const auto& physicalDevice : physicalDeviceList)
+                std::multimap<int, vk::raii::PhysicalDevice> pdCandidates;
+                // Evaluate whether the physical device fits our specification
+                for (const auto& pd : physicalDeviceList)
                 {
-                        auto physicalDeviceFeatures{physicalDevice.getFeatures2()};
-                        auto physicalDeviceProperties{physicalDevice.getProperties2()};
+                        auto physicalDeviceFeatures{pd.getFeatures2()};
+                        auto physicalDeviceProperties{pd.getProperties2()};
 
+                        const vk::PhysicalDeviceFeatures& features{physicalDeviceFeatures.features};
+
+                        Uint32 score{};
+
+                        switch (physicalDeviceProperties.properties.deviceType)
+                        {
+                                case vk::PhysicalDeviceType::eDiscreteGpu:
+                                score += 100;
+                                break;
+
+                                case vk::PhysicalDeviceType::eIntegratedGpu:
+                                score += 50;
+                                break;
+                        };
                         
+                        // Device must have API version minimum 1.3
+                        if (!(physicalDeviceProperties.properties.apiVersion >= vk::ApiVersion13))
+                        {
+                                continue;
+                        }
 
+                        // Queue family check, make sure that the queue family support graphics commands
+                        auto pdQueueFamily{pd.getQueueFamilyProperties()};
+                        bool isGraphicSupport{std::ranges::any_of(pdQueueFamily, 
+                                [](const auto &queueFamily){ return !!(queueFamily.queueFlags & vk::QueueFlagBits::eGraphics); }
+                        )};
+
+                        if (!isGraphicSupport)
+                        {
+                                continue;
+                        }
+
+                        // required extensions
+                        std::vector<const char*> requiredExtensions = {vk::KHRSwapchainExtensionName};
+                        
+                        auto deviceExtensions{physicalDevice.enumerateDeviceExtensionProperties()};
+                        bool isSupportAllRequiredExtensions{std::ranges::all_of(requiredExtensions, 
+                                [&deviceExtensions](const auto& requiredDeviceExtension){
+                                        return std::ranges::any_of(deviceExtensions, 
+                                                [requiredDeviceExtension](const auto& availableDeviceExtension){
+                                                        return strcmp(availableDeviceExtension.extensionName, requiredDeviceExtension) == 0;
+                                                });
+                                })};
+                        // std::vector<const char*> requiredDeviceExtension = {vk::KHRSwapchainExtensionName};
+
+                        // auto availableDeviceExtensions = physicalDevice.enumerateDeviceExtensionProperties();
+                        // bool supportsAllRequiredExtensions =
+                        // std::ranges::all_of( requiredDeviceExtension,
+                        // [&availableDeviceExtensions]( auto const & requiredDeviceExtension )
+                        // {
+                        //         return std::ranges::any_of( availableDeviceExtensions,
+                        //                                 [requiredDeviceExtension]( auto const & availableDeviceExtension )
+                        //                                 { return strcmp( availableDeviceExtension.extensionName, requiredDeviceExtension ) == 0; } );
+                        // } );
+
+                        // required features
+                        if (!features.geometryShader)
+                        {
+                                continue;
+                        }
+
+                        pdCandidates.insert(std::make_pair(score, pd));
                         break;                        
                 }
+
+                if (!pdCandidates.empty() && pdCandidates.rbegin() -> first > 0)
+                {
+                        physicalDevice = pdCandidates.rbegin() -> second;
+                }
+                else
+                {
+                        throw std::runtime_error("The physical device sucks");
+                }
+
         }
 
         void initWindow()
