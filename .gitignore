@@ -1,1 +1,4 @@
 out/
+VulkanCPP.code-workspace
+.vscode/
+build/
