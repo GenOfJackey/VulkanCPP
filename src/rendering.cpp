@@ -18,25 +18,25 @@
 static SDL_Window* currentWindow {nullptr};
 static VkInstance instance {nullptr};
 
-static std::vector<const char*> VALIDATION_LAYER_NAME {"VK_LAYER_KHRONOS_validation"};
+std::vector<const char*> LAYER_NAMES{"VK_LAYER_KHRONOS_validation"};
 
-void isErrorVkResultPrint(std::string_view flavText, VkResult resultOperation);
+void isErrorVkResultPrint(std::string_view flavText, const VkResult* resultOperation);
 void initWindow();
 void initVulkan();
 void createInstance();
 void rendererLoop();
 void rendererCleanup();
 
-void isErrorVkResultPrint(std::string_view flavText, VkResult resultOperation)
+void isErrorVkResultPrint(std::string_view flavText, const VkResult* resultOperation)
 {
 
-        if ((resultOperation == VK_SUCCESS) || (resultOperation == VK_INCOMPLETE))
+        if ((*resultOperation == VK_SUCCESS) || (*resultOperation == VK_INCOMPLETE))
         {
-                std::cout << flavText << string_VkResult(resultOperation) << '\n';
+                std::cout << flavText << string_VkResult(*resultOperation) << '\n';
         }
         else
         {
-                throw std::runtime_error(std::string(flavText) + '\n' + string_VkResult(resultOperation));
+                throw std::runtime_error(std::string(flavText) + '\n' + string_VkResult(*resultOperation));
         }
 }
 
@@ -50,72 +50,79 @@ void createInstance()
         applicationInfo.pEngineName = "Astar Field";
         applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
-        uint32_t layerCount{0};
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        // Acquire required instance layer
+        uint32_t vulkanLayerPropertiesCount{};
+        VkResult isLayerCounted {vkEnumerateInstanceLayerProperties(&vulkanLayerPropertiesCount, nullptr)};
+        isErrorVkResultPrint("Instance Layer Counted: ", &isLayerCounted);
 
-        VkLayerProperties layerPropertiesList[]{};
-        VkResult isEnumerateLayers {vkEnumerateInstanceLayerProperties(&layerCount, layerPropertiesList)};
-        isErrorVkResultPrint("Instance Layer Enumeration: ", isEnumerateLayers);
-
-        std::cout << layerPropertiesList[1].layerName << '\n';
-
+        VkLayerProperties layerPropertiesList[vulkanLayerPropertiesCount]{};
+        VkResult isLayerEnumerated {vkEnumerateInstanceLayerProperties(&vulkanLayerPropertiesCount, layerPropertiesList)};
+        isErrorVkResultPrint("Instance Layer Enumerated: ", &isLayerEnumerated);
+        
         std::vector<const char*> supportedLayer{};
-
-        // Checks for requested layers if it's supported through simple for loops
-        for (const char* validationLayer : VALIDATION_LAYER_NAME)
+        for (const char* layerName : LAYER_NAMES)
         {
-                bool isFoundLayer{false};
-
-                for (int i{0}; i < layerCount; ++i)
+                for (int i{0}; i < vulkanLayerPropertiesCount; ++i)
                 {
-                        const auto layerProperties{layerPropertiesList[i]};
-
-                        if (strcmp(validationLayer, layerProperties.layerName) == 0)
+                        VkLayerProperties layerProperties {layerPropertiesList[i]};
+                        if (strcmp(layerName, layerProperties.layerName) == 0)
                         {
-                                isFoundLayer = true;
+                                supportedLayer.push_back(layerProperties.layerName);
                         }
-                        
-                        supportedLayer.push_back(layerProperties.layerName);
-                }
-                
-                if (!isFoundLayer)
-                {
-                        throw std::runtime_error("Validation Layer Not Found");
+                        else
+                        {
+                                std::cout << "Unsupported instance layer: " << layerProperties.layerName << '\n';
+                        }
                 }
         }
 
-        // Compare if the required instance extensions is unsupported
-        uint32_t extensionSDLCount{};
-        auto extensions {SDL_Vulkan_GetInstanceExtensions(&extensionSDLCount)};
-        if (extensions == nullptr) throw std::runtime_error("SDL_Vulkan_GetInstanceExtensions failed to get extensions");
+        uint32_t extensionSDLCount {};
+        auto SDLRequiredExtensions {SDL_Vulkan_GetInstanceExtensions(&extensionSDLCount)};
+        if (SDLRequiredExtensions == nullptr) throw std::runtime_error("Failed to acquire SDL Required Extension");
 
-        uint32_t extensionVkCount{};
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionVkCount, nullptr);
+        /*
+        TODO:
+        Implement flexible way to get custom extensions may be needed, incorporating into the vkEnumerateInstanceExtensionProperties pLayerName
+        Along with adding flexible way, probably also need to merge the count, but that doesn't matter
+        */
 
-        uint32_t extensionCount {extensionSDLCount + extensionVkCount};
+        uint32_t vulkanExtensionPropertiesCount {};
+        VkResult isCountedExtensionProperties {vkEnumerateInstanceExtensionProperties(nullptr, &vulkanExtensionPropertiesCount, nullptr)};
+        isErrorVkResultPrint("Instance Extension Properties Counted: ", &isCountedExtensionProperties);
 
-        VkExtensionProperties extensionPropertiesList[VK_MAX_EXTENSION_NAME_SIZE]{};
-        VkResult isEnumerateExtensions {vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensionPropertiesList)};
-        isErrorVkResultPrint("Instance Extension Enumeration: ", isEnumerateExtensions);
+        VkExtensionProperties extensionPropertiesList[vulkanExtensionPropertiesCount]{};
+        VkResult isEnumerateExtension {vkEnumerateInstanceExtensionProperties(nullptr, &vulkanExtensionPropertiesCount, extensionPropertiesList)};
+        isErrorVkResultPrint("Instance Extension Enumerated: ", &isEnumerateExtension);
 
-        for (int i{0}; i < extensionCount; ++i)
+        std::vector<const char*> supportedExtension{};
+        for (int i{0}; i < extensionSDLCount; ++i)
         {
-                const auto& extensionProperties {extensionPropertiesList[i]};
-                const auto& SDLExtension {extensions[i]};
-
-                if (!(strcmp(extensionProperties.extensionName, SDLExtension) == 0))
+                auto requiredExtension {SDLRequiredExtensions[i]};
+                for (int j{0}; j < vulkanExtensionPropertiesCount; ++j)
                 {
-                     std::cout << "Unsupported extension: " << extensionProperties.extensionName << '\n';   
+                        VkExtensionProperties extensionProperties {extensionPropertiesList[j]};
+                        if (strcmp(requiredExtension, extensionProperties.extensionName) == 0)
+                        {
+                                supportedExtension.push_back(extensionProperties.extensionName);
+                        }
+                        else
+                        {
+                                std::cout << "Unsupported instance extension: " << extensionProperties.extensionName << '\n';
+                        }
                 }
         }
+        std::cout << "Successfully enumerate extensions\n";
 
         VkInstanceCreateInfo instanceInfo{};
         instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        instanceInfo.pApplicationInfo = &applicationInfo; 
-        instanceInfo.ppEnabledExtensionNames = extensions;
+        instanceInfo.pApplicationInfo = &applicationInfo;
+        instanceInfo.enabledLayerCount = static_cast<uint32_t> (supportedLayer.size());
+        instanceInfo.ppEnabledLayerNames = supportedLayer.data();
+        instanceInfo.enabledExtensionCount = static_cast<uint32_t> (supportedExtension.size());
+        instanceInfo.ppEnabledExtensionNames = supportedExtension.data();
 
         VkResult isInstanceCreation = vkCreateInstance(&instanceInfo, nullptr, &instance);
-        isErrorVkResultPrint("Instance Creation: ", isInstanceCreation);
+        isErrorVkResultPrint("Instance Creation: ", &isInstanceCreation);
 }
 
 void renderingMain()
