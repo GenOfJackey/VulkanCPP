@@ -110,6 +110,7 @@ const std::vector<const char *> getInstanceExtension()
         isErrorVkResultPrint("Instance Extension Properties Counted: ", &isCountedExtensionProperties);
 
         std::vector<VkExtensionProperties> extensionPropertiesList{};
+        extensionPropertiesList.resize(vulkanExtensionPropertiesCount);
         VkResult isEnumerateExtension{vkEnumerateInstanceExtensionProperties(nullptr, &vulkanExtensionPropertiesCount, extensionPropertiesList.data())};
         isErrorVkResultPrint("Instance Extension Enumerated: ", &isEnumerateExtension);
 
