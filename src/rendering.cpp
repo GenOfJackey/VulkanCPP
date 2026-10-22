@@ -1,5 +1,5 @@
 // #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
-#define GLFW_INCLUDE_VULKAN
+// #define GLFW_INCLUDE_VULKAN
 
 #include "rendering.h"
 
@@ -85,10 +85,18 @@ const std::vector<const char *> getInstanceLayer()
 
 const std::vector<const char *> getInstanceExtension()
 {
-        uint32_t requiredExtensionCount{};
-        auto requiredExtensions{SDL_Vulkan_GetInstanceExtensions(&requiredExtensionCount)};
-        if (requiredExtensions == nullptr)
+        uint32_t requiredSDLExtensionCount{};
+        auto requiredSDLExtensions{SDL_Vulkan_GetInstanceExtensions(&requiredSDLExtensionCount)};
+        if (requiredSDLExtensions == nullptr)
                 throw std::runtime_error("Failed to acquire SDL Required Extension");
+
+        std::vector<const char *> requiredExtensions{
+            "VK_KHR_get_physical_device_properties_2",
+            "VK_KHR_dynamic_rendering"};
+        for (int i{0}; i < requiredSDLExtensionCount; ++i)
+        {
+                requiredExtensions.push_back(requiredSDLExtensions[i]);
+        }
 
         // std::vector<const char*> requiredExtensions{"VK_EXT_debug_report"};
         // for (int i{0}; i < extensionSDLCount; ++i)
@@ -96,12 +104,6 @@ const std::vector<const char *> getInstanceExtension()
         //         const char* extensionName {SDLRequiredExtensions[i]};
         //         requiredExtensions.push_back(extensionName);
         // }
-
-        /*
-        TODO:
-        Implement flexible way to get custom extensions may be needed
-        Along with adding flexible way, probably also need to merge the count, but that doesn't matter
-        */
 
         uint32_t vulkanExtensionPropertiesCount{};
         VkResult isCountedExtensionProperties{vkEnumerateInstanceExtensionProperties(nullptr, &vulkanExtensionPropertiesCount, nullptr)};
@@ -113,9 +115,8 @@ const std::vector<const char *> getInstanceExtension()
 
         // std::cout << extensionPropertiesList.size() << '\n';
         std::vector<const char *> supportedExtension{};
-        for (int i{0}; i < requiredExtensionCount; ++i)
+        for (const char *requiredExtension : requiredExtensions)
         {
-                auto requiredExtension{requiredExtensions[i]};
                 bool isFound{false};
                 for (VkExtensionProperties extensionProperties : extensionPropertiesList)
                 {
@@ -175,6 +176,12 @@ void createDevice()
         std::vector<VkPhysicalDevice> physicalDeviceList{};
         VkResult isPhysicalDeviceEnumerated{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDeviceList.data())};
         isErrorVkResultPrint("phyDevice Enumerated: ", &isPhysicalDeviceEnumerated);
+
+        for (VkPhysicalDevice physicalDevice : physicalDeviceList)
+        {
+                VkPhysicalDeviceProperties physicalDeviceProperties{};
+                vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+        }
 
         VkDeviceCreateInfo deviceInfo{};
 
