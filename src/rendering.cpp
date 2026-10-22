@@ -176,6 +176,11 @@ void createDevice()
         VkResult isPhysicalDeviceEnumerated{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDeviceList.data())};
         isErrorVkResultPrint("phyDevice Enumerated: ", &isPhysicalDeviceEnumerated);
 
+        /*
+        TODO:
+        Finish the selection ranking for the best Physical Device available for GPU computing, refer to
+        Vulkan Tutorial since I don't know stuff
+        */
         for (VkPhysicalDevice physicalDevice : physicalDeviceList)
         {
                 VkPhysicalDeviceProperties2 physicalDeviceProperties{};
