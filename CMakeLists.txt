@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_COMPILE_FEATURES OFF)
 
 add_subdirectory(external/SDL3)
+# add_subdirectory(external/glfw)
 
 find_package(Vulkan REQUIRED)
 find_package(slang CONFIG HINTS "$ENV{VULKAN_SDK}/lib/cmake")
@@ -18,6 +19,7 @@ add_executable(VulkanCPP
 
 target_link_libraries(VulkanCPP PRIVATE 
         Vulkan::Vulkan
+        # glfw
         SDL3::SDL3
         glm::glm
 )

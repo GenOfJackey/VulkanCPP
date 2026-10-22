@@ -5,12 +5,14 @@
 
 int main()
 {
-        try {
-                renderingMain();
-        } 
-        catch (const std::exception& error)
+        try
         {
-                std::cerr << "Something went wrong and is forced to shutdown.\n" << error.what() << '\n';
+                renderingMain();
+        }
+        catch (const std::exception &error)
+        {
+                std::cerr << "Something went wrong and is forced to shutdown.\n"
+                          << error.what() << '\n';
                 return -1;
         }
 
