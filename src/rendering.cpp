@@ -67,7 +67,7 @@ const std::vector<const char *> getInstanceLayer()
                         // VkLayerProperties layerProperties {layerPropertiesList[i]};
                         if (strcmp(layerName, layerProperties.layerName) == 0)
                         {
-                                supportedLayer.push_back(layerProperties.layerName);
+                                supportedLayer.push_back(layerName);
                                 isFound = true;
                                 break;
                         }
@@ -90,8 +90,7 @@ const std::vector<const char *> getInstanceExtension()
         if (requiredSDLExtensions == nullptr)
                 throw std::runtime_error("Failed to acquire SDL Required Extension");
 
-        std::vector<const char *> requiredExtensions{
-            "VK_EXT_debug_utils"};
+        std::vector<const char *> requiredExtensions{};
         for (int i{0}; i < requiredSDLExtensionCount; ++i)
         {
                 requiredExtensions.push_back(requiredSDLExtensions[i]);
@@ -123,7 +122,7 @@ const std::vector<const char *> getInstanceExtension()
                         // VkExtensionProperties extensionProperties {extensionPropertiesList[j]};
                         if (strcmp(requiredExtension, extensionProperties.extensionName) == 0)
                         {
-                                supportedExtension.push_back(extensionProperties.extensionName);
+                                supportedExtension.push_back(requiredExtension);
                                 isFound = true;
                                 break;
                         }
