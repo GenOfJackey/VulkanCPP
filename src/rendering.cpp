@@ -17,7 +17,7 @@
 
 static SDL_Window *currentWindow{nullptr};
 static VkInstance instance{nullptr};
-static VkDevice device{nullptr};
+static VkPhysicalDevice currentPhysicalDevice{nullptr};
 
 void isErrorVkResultPrint(std::string_view flavText, const VkResult *resultOperation);
 const std::vector<const char *> getInstanceLayer();
@@ -162,8 +162,6 @@ void createInstance()
 
 void createDevice()
 {
-        VkPhysicalDevice currentPhysicalDevice{};
-
         // Select the best physical device required for graphics
         uint32_t physicalDeviceCount{};
         VkResult isPhysicalDeviceCounted{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr)};
@@ -176,7 +174,7 @@ void createDevice()
         /*
         TODO:
         Finish the selection ranking for the best Physical Device available for GPU computing, refer to
-        Vulkan Tutorial since I don't know stuff
+        Vulkan Tutorial for important features since I don't know stuff
         */
         for (VkPhysicalDevice physicalDevice : physicalDeviceList)
         {
@@ -213,6 +211,11 @@ void createDevice()
                         continue;
                 }
         }
+/*
+TODO:
+Get Queue family for Graphics
+hypothesis: The queue family is for the chosen current physical device, not for other physical devices.
+*/
 }
 
 void renderingMain()
