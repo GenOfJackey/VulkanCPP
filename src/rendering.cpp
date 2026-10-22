@@ -92,7 +92,8 @@ const std::vector<const char *> getInstanceExtension()
 
         std::vector<const char *> requiredExtensions{
             "VK_KHR_get_physical_device_properties_2",
-            "VK_KHR_dynamic_rendering"};
+            "VK_KHR_dynamic_rendering",
+            "VK_EXT_debug_utils"};
         for (int i{0}; i < requiredSDLExtensionCount; ++i)
         {
                 requiredExtensions.push_back(requiredSDLExtensions[i]);
@@ -182,7 +183,29 @@ void createDevice()
         {
                 VkPhysicalDeviceProperties physicalDeviceProperties{};
                 vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
-        }
+
+                uint32_t score{0};
+
+                if (physicalDeviceProperties.apiVersion < VK_API_VERSION_1_3)
+                        continue;
+                switch (physicalDeviceProperties.deviceType)
+                {
+                case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+                        score += 100;
+                        break;
+
+                case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+                        score += 50;
+                        break;
+
+                case VK_PHYSICAL_DEVICE_TYPE_CPU:
+                        score += 20;
+                        break;
+
+                default:
+                        continue;
+                }
+                }
 
         VkDeviceCreateInfo deviceInfo{};
 
