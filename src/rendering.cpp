@@ -12,10 +12,7 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <cstring>
 #include <vector>
-#include <array>
-#include <ranges>
 #include <string_view>
 
 static SDL_Window *currentWindow{nullptr};
