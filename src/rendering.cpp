@@ -91,8 +91,6 @@ const std::vector<const char *> getInstanceExtension()
                 throw std::runtime_error("Failed to acquire SDL Required Extension");
 
         std::vector<const char *> requiredExtensions{
-            "VK_KHR_get_physical_device_properties_2",
-            "VK_KHR_dynamic_rendering",
             "VK_EXT_debug_utils"};
         for (int i{0}; i < requiredSDLExtensionCount; ++i)
         {
@@ -181,14 +179,23 @@ void createDevice()
 
         for (VkPhysicalDevice physicalDevice : physicalDeviceList)
         {
-                VkPhysicalDeviceProperties physicalDeviceProperties{};
-                vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+                VkPhysicalDeviceProperties2 physicalDeviceProperties{};
+                physicalDeviceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+                vkGetPhysicalDeviceProperties2(physicalDevice, &physicalDeviceProperties);
+
+                VkPhysicalDeviceFeatures2 physicalDeviceFeatures{};
+                physicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+                vkGetPhysicalDeviceFeatures2(physicalDevice, &physicalDeviceFeatures);
 
                 uint32_t score{0};
 
-                if (physicalDeviceProperties.apiVersion < VK_API_VERSION_1_3)
+                if (physicalDeviceProperties.properties.apiVersion < VK_API_VERSION_1_3)
                         continue;
-                switch (physicalDeviceProperties.deviceType)
+
+                if (physicalDeviceFeatures.features.geometryShader != VK_TRUE)
+                        continue;
+
+                switch (physicalDeviceProperties.properties.deviceType)
                 {
                 case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
                         score += 100;
@@ -205,7 +212,7 @@ void createDevice()
                 default:
                         continue;
                 }
-                }
+        }
 
         VkDeviceCreateInfo deviceInfo{};
 
