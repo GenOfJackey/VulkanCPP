@@ -5,8 +5,6 @@
 
 int main()
 {
-
-        int test{};
         try
         {
                 renderingMain();

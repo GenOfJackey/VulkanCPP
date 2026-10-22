@@ -20,6 +20,7 @@
 
 static SDL_Window *currentWindow{nullptr};
 static VkInstance instance{nullptr};
+static VkDevice device{nullptr};
 
 void isErrorVkResultPrint(std::string_view flavText, const VkResult *resultOperation);
 const std::vector<const char *> getInstanceLayer();
@@ -27,6 +28,7 @@ const std::vector<const char *> getInstanceExtension();
 void initWindow();
 void initVulkan();
 void createInstance();
+void createDevice();
 void rendererLoop();
 void rendererCleanup();
 
@@ -159,6 +161,15 @@ void createInstance()
 
         VkResult isInstanceCreation = vkCreateInstance(&instanceInfo, nullptr, &instance);
         isErrorVkResultPrint("Instance Creation: ", &isInstanceCreation);
+}
+
+void createDevice()
+{
+        VkPhysicalDevice physicalDevice{};
+
+        VkDeviceCreateInfo deviceInfo{};
+
+        vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &device);
 }
 
 void renderingMain()
