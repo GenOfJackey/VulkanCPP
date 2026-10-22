@@ -193,7 +193,6 @@ void createDevice()
 
                 if (physicalDeviceFeatures.features.geometryShader != VK_TRUE)
                         continue;
-
                 switch (physicalDeviceProperties.properties.deviceType)
                 {
                 case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
@@ -212,10 +211,6 @@ void createDevice()
                         continue;
                 }
         }
-
-        VkDeviceCreateInfo deviceInfo{};
-
-        vkCreateDevice(currentPhysicalDevice, &deviceInfo, nullptr, &device);
 }
 
 void renderingMain()
