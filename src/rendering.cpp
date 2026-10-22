@@ -165,11 +165,20 @@ void createInstance()
 
 void createDevice()
 {
-        VkPhysicalDevice physicalDevice{};
+        VkPhysicalDevice currentPhysicalDevice{};
+
+        // Select the best physical device required for graphics
+        uint32_t physicalDeviceCount{};
+        VkResult isPhysicalDeviceCounted{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr)};
+        isErrorVkResultPrint("phyDevice Counted: ", &isPhysicalDeviceCounted);
+
+        std::vector<VkPhysicalDevice> physicalDeviceList{};
+        VkResult isPhysicalDeviceEnumerated{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDeviceList.data())};
+        isErrorVkResultPrint("phyDevice Enumerated: ", &isPhysicalDeviceEnumerated);
 
         VkDeviceCreateInfo deviceInfo{};
 
-        vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &device);
+        vkCreateDevice(currentPhysicalDevice, &deviceInfo, nullptr, &device);
 }
 
 void renderingMain()
@@ -196,6 +205,7 @@ void initWindow()
 void initVulkan()
 {
         createInstance();
+        createDevice();
 }
 
 void rendererLoop()
