@@ -2,3 +2,4 @@ out/
 VulkanCPP.code-workspace
 .vscode/
 build/
+CMakePresets.json
