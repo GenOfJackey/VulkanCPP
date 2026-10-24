@@ -306,7 +306,9 @@ void createPhysicalDevice()
 
 /*
 TODO:
-Create a logical device (vkCreateDevice) and insert it as a static member for rendering.cpp
+- Create a logical device (vkCreateDevice) and insert it as a static member for rendering.cpp
+- Finish VkDeviceQueueCreateInfo, refer to
+Vulkan Tutorial or Vulkan Specification for references
 */
 void createLogicalDevice()
 {
