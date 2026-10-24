@@ -1,6 +1,21 @@
 // #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 // #define GLFW_INCLUDE_VULKAN
 
+/*
+VULKANCPP RENDERING
+THIS PLACE IS WHERE ALL THE RENDERING IS CODED. EVERYTHING IS VULKAN WITH SDL DEPENDENCIES FOR WINDOWING AND INPUT
+THIS IS A TEMPORARY PLACE, FUTURE VERSION WILL SEPARATE THE USAGE OF INPUT AND WINDOWING INTO DIFFERENT HEADER
+
+Future Goal:
+- Replace inefficient std::vector into a stack allocation for faster processing and removing CPU overhead
+*/
+
+#ifndef NDEBUG
+constexpr bool IS_DEBUG{true};
+#else
+constexpr bool IS_DEBUG{false};
+#endif
+
 #include "rendering.h"
 
 #include <vulkan/vulkan.h>
@@ -9,6 +24,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <glm/glm.hpp>
+
 #include <map>
 #include <iostream>
 #include <stdexcept>
@@ -19,42 +35,48 @@
 static SDL_Window *currentWindow{nullptr};
 static VkInstance instance{nullptr};
 static VkPhysicalDevice currentPhysicalDevice{nullptr};
+static VkDevice currentLogicalDevice{nullptr};
 
-void isErrorVkResultPrint(std::string_view flavText, const VkResult *resultOperation);
+void isErrorVkResultPrint(std::string_view flavText, const VkResult resultOperation);
 const std::vector<const char *> getInstanceLayer();
 const std::vector<const char *> getInstanceExtension();
 void initWindow();
 void initVulkan();
 void createInstance();
 void createPhysicalDevice();
+void createLogicalDevice();
 void rendererLoop();
 void rendererCleanup();
 
-void isErrorVkResultPrint(std::string_view flavText, const VkResult *resultOperation)
+void isErrorVkResultPrint(std::string_view flavText, const VkResult resultOperation)
 {
 
-        if ((*resultOperation == VK_SUCCESS) || (*resultOperation == VK_INCOMPLETE))
+        if ((resultOperation == VK_SUCCESS) || (resultOperation == VK_INCOMPLETE))
         {
-                std::cout << flavText << string_VkResult(*resultOperation) << '\n';
+                std::cout << flavText << string_VkResult(resultOperation) << '\n';
         }
         else
         {
-                throw std::runtime_error(std::string(flavText) + '\n' + string_VkResult(*resultOperation));
+                throw std::runtime_error(std::string(flavText) + '\n' + string_VkResult(resultOperation));
         }
 }
 
 const std::vector<const char *> getInstanceLayer()
 {
-        const std::vector<const char *> LAYER_NAMES{"VK_LAYER_KHRONOS_validation"};
+        std::vector<const char *> LAYER_NAMES{};
+        if (IS_DEBUG)
+        {
+                LAYER_NAMES.push_back("VK_LAYER_KHRONOS_validation");
+        }
 
         uint32_t vulkanLayerPropertiesCount{};
         VkResult isLayerCounted{vkEnumerateInstanceLayerProperties(&vulkanLayerPropertiesCount, nullptr)};
-        isErrorVkResultPrint("Instance Layer Counted: ", &isLayerCounted);
+        isErrorVkResultPrint("Instance Layer Counted: ", isLayerCounted);
 
         std::vector<VkLayerProperties> layerPropertiesList{};
         layerPropertiesList.resize(vulkanLayerPropertiesCount);
         VkResult isLayerEnumerated{vkEnumerateInstanceLayerProperties(&vulkanLayerPropertiesCount, layerPropertiesList.data())};
-        isErrorVkResultPrint("Instance Layer Enumerated: ", &isLayerEnumerated);
+        isErrorVkResultPrint("Instance Layer Enumerated: ", isLayerEnumerated);
 
         std::vector<const char *> supportedLayer{};
         for (const char *layerName : LAYER_NAMES)
@@ -88,8 +110,12 @@ const std::vector<const char *> getInstanceExtension()
         if (requiredSDLExtensions == nullptr)
                 throw std::runtime_error("Failed to acquire SDL Required Extension");
 
-        std::vector<const char *> requiredExtensions{
-            VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
+        std::vector<const char *> requiredExtensions{};
+        if (IS_DEBUG)
+        {
+                requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
         for (int i{0}; i < requiredSDLExtensionCount; ++i)
         {
                 requiredExtensions.push_back(requiredSDLExtensions[i]);
@@ -104,12 +130,12 @@ const std::vector<const char *> getInstanceExtension()
 
         uint32_t vulkanExtensionPropertiesCount{};
         VkResult isCountedExtensionProperties{vkEnumerateInstanceExtensionProperties(nullptr, &vulkanExtensionPropertiesCount, nullptr)};
-        isErrorVkResultPrint("Instance Extension Properties Counted: ", &isCountedExtensionProperties);
+        isErrorVkResultPrint("Instance Extension Properties Counted: ", isCountedExtensionProperties);
 
         std::vector<VkExtensionProperties> extensionPropertiesList{};
         extensionPropertiesList.resize(vulkanExtensionPropertiesCount);
         VkResult isEnumerateExtension{vkEnumerateInstanceExtensionProperties(nullptr, &vulkanExtensionPropertiesCount, extensionPropertiesList.data())};
-        isErrorVkResultPrint("Instance Extension Enumerated: ", &isEnumerateExtension);
+        isErrorVkResultPrint("Instance Extension Enumerated: ", isEnumerateExtension);
 
         // std::cout << extensionPropertiesList.size() << '\n';
         std::vector<const char *> supportedExtension{};
@@ -159,7 +185,7 @@ void createInstance()
         instanceInfo.ppEnabledExtensionNames = supportedExtension.data();
 
         VkResult isInstanceCreation = vkCreateInstance(&instanceInfo, nullptr, &instance);
-        isErrorVkResultPrint("Instance Creation: ", &isInstanceCreation);
+        isErrorVkResultPrint("Instance Creation: ", isInstanceCreation);
 }
 
 void createPhysicalDevice()
@@ -167,12 +193,12 @@ void createPhysicalDevice()
         // Select the best physical device required for graphics
         uint32_t physicalDeviceCount{};
         VkResult isPhysicalDeviceCounted{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr)};
-        isErrorVkResultPrint("phyDevice Counted: ", &isPhysicalDeviceCounted);
+        isErrorVkResultPrint("phyDevice Counted: ", isPhysicalDeviceCounted);
 
         std::vector<VkPhysicalDevice> physicalDeviceList{};
         physicalDeviceList.resize(physicalDeviceCount);
         VkResult isPhysicalDeviceEnumerated{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDeviceList.data())};
-        isErrorVkResultPrint("phyDevice Enumerated: ", &isPhysicalDeviceEnumerated);
+        isErrorVkResultPrint("phyDevice Enumerated: ", isPhysicalDeviceEnumerated);
 
         /*
         TODO:
@@ -186,14 +212,29 @@ void createPhysicalDevice()
                 physicalDeviceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
                 vkGetPhysicalDeviceProperties2(physicalDevice, &physicalDeviceProperties);
 
-                VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeat{};
-                dynamicRenderingFeat.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
-                dynamicRenderingFeat.dynamicRendering = VK_TRUE;
+                VkPhysicalDeviceExtendedDynamicState3FeaturesEXT dynamicState3{};
+                dynamicState3.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+
+                VkPhysicalDeviceVulkan11Features feature11{};
+                feature11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+                feature11.pNext = &dynamicState3;
+                VkPhysicalDeviceVulkan13Features feature13{};
+                feature13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+                feature13.pNext = &feature11;
 
                 VkPhysicalDeviceFeatures2 physicalDeviceFeatures{};
                 physicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-                physicalDeviceFeatures.pNext = &dynamicRenderingFeat;
+                physicalDeviceFeatures.pNext = &feature13;
                 vkGetPhysicalDeviceFeatures2(physicalDevice, &physicalDeviceFeatures);
+
+                if (physicalDeviceProperties.properties.apiVersion < VK_API_VERSION_1_3)
+                        continue;
+                if (physicalDeviceFeatures.features.geometryShader != VK_TRUE)
+                        continue;
+                if (feature11.shaderDrawParameters != VK_TRUE)
+                        continue;
+                if (feature13.dynamicRendering != VK_TRUE)
+                        continue;
 
                 uint32_t queueFamilyPropertiesCount{};
                 vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyPropertiesCount, nullptr);
@@ -201,17 +242,37 @@ void createPhysicalDevice()
                 phyDeviceQueueFamilyProperties.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
                 vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyPropertiesCount, &phyDeviceQueueFamilyProperties);
 
+                std::vector<const char *> requiredExtension{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
                 uint32_t phyDeviceExtensionPropertiesCount{};
                 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &phyDeviceExtensionPropertiesCount, nullptr);
+
                 std::vector<VkExtensionProperties> phyDeviceExtensionProperties{};
+                phyDeviceExtensionProperties.resize(phyDeviceExtensionPropertiesCount);
                 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &phyDeviceExtensionPropertiesCount, phyDeviceExtensionProperties.data());
+
+                std::vector<const char *> supportedExtension{};
+                for (const char *extension : requiredExtension)
+                {
+                        bool isFound{};
+                        for (VkExtensionProperties properties : phyDeviceExtensionProperties)
+                        {
+                                if (strcmp(extension, properties.extensionName) == 0)
+                                {
+                                        supportedExtension.push_back(extension);
+                                        isFound = true;
+                                        break;
+                                }
+                        }
+
+                        if (!isFound)
+                        {
+                                std::cout << "Unsupported Required phyDevice Extension: " << extension << '\n';
+                        }
+                }
 
                 VkQueueFlags requiredFlags{VK_QUEUE_TRANSFER_BIT | VK_QUEUE_GRAPHICS_BIT};
                 if (!(phyDeviceQueueFamilyProperties.queueFamilyProperties.queueFlags & requiredFlags))
-                        continue;
-                if (physicalDeviceProperties.properties.apiVersion < VK_API_VERSION_1_3)
-                        continue;
-                if (physicalDeviceFeatures.features.geometryShader != VK_TRUE)
                         continue;
 
                 uint32_t score{0};
@@ -241,11 +302,35 @@ void createPhysicalDevice()
         {
                 throw std::runtime_error("No suitable physical device");
         }
-        /*
-        TODO:
-        - Implement pNext dynamic rendering for physical devices where it could propagate, refer to
-        Vulkan reference to know about the pNext functionality.
-        */
+}
+
+/*
+TODO:
+Create a logical device (vkCreateDevice) and insert it as a static member for rendering.cpp
+*/
+void createLogicalDevice()
+{
+
+        VkDeviceQueueCreateInfo deviceQueueInfo{};
+        deviceQueueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+
+        uint32_t extensionPropertiesCount{};
+        VkResult isExtensionCounted{vkEnumerateDeviceExtensionProperties(currentPhysicalDevice, nullptr, &extensionPropertiesCount, nullptr)};
+        isErrorVkResultPrint("Device Extension Counted: ", isExtensionCounted);
+
+        std::vector<VkExtensionProperties> extensionPropertiesList{};
+        extensionPropertiesList.resize(extensionPropertiesCount);
+        VkResult isExtensionEnumerated{vkEnumerateDeviceExtensionProperties(currentPhysicalDevice, nullptr, &extensionPropertiesCount, extensionPropertiesList.data())};
+        isErrorVkResultPrint("Device Extension Enumerated: ", isExtensionEnumerated);
+
+        VkDeviceCreateInfo deviceInfo{};
+        deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        deviceInfo.enabledExtensionCount = 0;
+        deviceInfo.ppEnabledExtensionNames = nullptr; // TODO: Change extensions into its appropriate variable value
+        deviceInfo.queueCreateInfoCount = 0;
+        deviceInfo.pQueueCreateInfos = nullptr; // TODO: Change queueCreateInfoCount into its appropriate variable value
+
+        isErrorVkResultPrint("Device Creation: ", vkCreateDevice(currentPhysicalDevice, nullptr, nullptr, &currentLogicalDevice));
 }
 
 void renderingMain()
