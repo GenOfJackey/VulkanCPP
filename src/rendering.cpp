@@ -88,7 +88,8 @@ const std::vector<const char *> getInstanceExtension()
         if (requiredSDLExtensions == nullptr)
                 throw std::runtime_error("Failed to acquire SDL Required Extension");
 
-        std::vector<const char *> requiredExtensions{};
+        std::vector<const char *> requiredExtensions{
+            VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
         for (int i{0}; i < requiredSDLExtensionCount; ++i)
         {
                 requiredExtensions.push_back(requiredSDLExtensions[i]);
@@ -179,22 +180,31 @@ void createPhysicalDevice()
         Vulkan Tutorial for important features since I don't know stuff
         */
         std::multimap<uint32_t, VkPhysicalDevice> physicalDeviceCandidates{};
-        for (VkPhysicalDevice physicalDevice : physicalDeviceList)
+        for (const VkPhysicalDevice &physicalDevice : physicalDeviceList)
         {
                 VkPhysicalDeviceProperties2 physicalDeviceProperties{};
                 physicalDeviceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
                 vkGetPhysicalDeviceProperties2(physicalDevice, &physicalDeviceProperties);
 
+                VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeat{};
+                dynamicRenderingFeat.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+                dynamicRenderingFeat.dynamicRendering = VK_TRUE;
+
                 VkPhysicalDeviceFeatures2 physicalDeviceFeatures{};
                 physicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+                physicalDeviceFeatures.pNext = &dynamicRenderingFeat;
                 vkGetPhysicalDeviceFeatures2(physicalDevice, &physicalDeviceFeatures);
 
                 uint32_t queueFamilyPropertiesCount{};
                 vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyPropertiesCount, nullptr);
-
                 VkQueueFamilyProperties2 phyDeviceQueueFamilyProperties{};
                 phyDeviceQueueFamilyProperties.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
                 vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyPropertiesCount, &phyDeviceQueueFamilyProperties);
+
+                uint32_t phyDeviceExtensionPropertiesCount{};
+                vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &phyDeviceExtensionPropertiesCount, nullptr);
+                std::vector<VkExtensionProperties> phyDeviceExtensionProperties{};
+                vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &phyDeviceExtensionPropertiesCount, phyDeviceExtensionProperties.data());
 
                 VkQueueFlags requiredFlags{VK_QUEUE_TRANSFER_BIT | VK_QUEUE_GRAPHICS_BIT};
                 if (!(phyDeviceQueueFamilyProperties.queueFamilyProperties.queueFlags & requiredFlags))
