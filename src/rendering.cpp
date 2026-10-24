@@ -243,9 +243,6 @@ void createPhysicalDevice()
         }
         /*
         TODO:
-        - Get Queue family for Graphics
-        hypothesis: The queue family is for the chosen current physical device, not for other physical devices.
-
         - Implement pNext dynamic rendering for physical devices where it could propagate, refer to
         Vulkan reference to know about the pNext functionality.
         */
