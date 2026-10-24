@@ -9,10 +9,11 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <glm/glm.hpp>
-
+#include <map>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <algorithm>
 #include <string_view>
 
 static SDL_Window *currentWindow{nullptr};
@@ -25,7 +26,7 @@ const std::vector<const char *> getInstanceExtension();
 void initWindow();
 void initVulkan();
 void createInstance();
-void createDevice();
+void createPhysicalDevice();
 void rendererLoop();
 void rendererCleanup();
 
@@ -160,7 +161,7 @@ void createInstance()
         isErrorVkResultPrint("Instance Creation: ", &isInstanceCreation);
 }
 
-void createDevice()
+void createPhysicalDevice()
 {
         // Select the best physical device required for graphics
         uint32_t physicalDeviceCount{};
@@ -168,6 +169,7 @@ void createDevice()
         isErrorVkResultPrint("phyDevice Counted: ", &isPhysicalDeviceCounted);
 
         std::vector<VkPhysicalDevice> physicalDeviceList{};
+        physicalDeviceList.resize(physicalDeviceCount);
         VkResult isPhysicalDeviceEnumerated{vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDeviceList.data())};
         isErrorVkResultPrint("phyDevice Enumerated: ", &isPhysicalDeviceEnumerated);
 
@@ -176,6 +178,7 @@ void createDevice()
         Finish the selection ranking for the best Physical Device available for GPU computing, refer to
         Vulkan Tutorial for important features since I don't know stuff
         */
+        std::multimap<uint32_t, VkPhysicalDevice> physicalDeviceCandidates{};
         for (VkPhysicalDevice physicalDevice : physicalDeviceList)
         {
                 VkPhysicalDeviceProperties2 physicalDeviceProperties{};
@@ -186,13 +189,23 @@ void createDevice()
                 physicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
                 vkGetPhysicalDeviceFeatures2(physicalDevice, &physicalDeviceFeatures);
 
-                uint32_t score{0};
+                uint32_t queueFamilyPropertiesCount{};
+                vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyPropertiesCount, nullptr);
 
+                VkQueueFamilyProperties2 phyDeviceQueueFamilyProperties{};
+                phyDeviceQueueFamilyProperties.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+                vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyPropertiesCount, &phyDeviceQueueFamilyProperties);
+
+                VkQueueFlags requiredFlags{VK_QUEUE_TRANSFER_BIT | VK_QUEUE_GRAPHICS_BIT};
+                if (!(phyDeviceQueueFamilyProperties.queueFamilyProperties.queueFlags & requiredFlags))
+                        continue;
                 if (physicalDeviceProperties.properties.apiVersion < VK_API_VERSION_1_3)
                         continue;
-
                 if (physicalDeviceFeatures.features.geometryShader != VK_TRUE)
                         continue;
+
+                uint32_t score{0};
+
                 switch (physicalDeviceProperties.properties.deviceType)
                 {
                 case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
@@ -203,22 +216,29 @@ void createDevice()
                         score += 50;
                         break;
 
-                case VK_PHYSICAL_DEVICE_TYPE_CPU:
-                        score += 20;
-                        break;
-
                 default:
-                        continue;
+                        score += 10;
                 }
-        }
-/*
-TODO:
-- Get Queue family for Graphics
-hypothesis: The queue family is for the chosen current physical device, not for other physical devices.
 
-- Implement pNext dynamic rendering for physical devices where it could propagate, refer to
-Vulkan reference to know about the pNext functionality.
-*/
+                physicalDeviceCandidates.insert(std::make_pair(score, physicalDevice));
+        }
+        if (!physicalDeviceCandidates.empty() && (physicalDeviceCandidates.rbegin()->first > 0))
+        {
+                currentPhysicalDevice = physicalDeviceCandidates.rbegin()->second;
+                std::cout << "phyDevice Founded\n";
+        }
+        else
+        {
+                throw std::runtime_error("No suitable physical device");
+        }
+        /*
+        TODO:
+        - Get Queue family for Graphics
+        hypothesis: The queue family is for the chosen current physical device, not for other physical devices.
+
+        - Implement pNext dynamic rendering for physical devices where it could propagate, refer to
+        Vulkan reference to know about the pNext functionality.
+        */
 }
 
 void renderingMain()
@@ -245,7 +265,7 @@ void initWindow()
 void initVulkan()
 {
         createInstance();
-        createDevice();
+        createPhysicalDevice();
 }
 
 void rendererLoop()
